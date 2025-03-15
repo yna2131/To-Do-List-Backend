@@ -3,9 +3,11 @@ import { db } from "./db/db";
 import { todosTable } from "./db/schema";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
+import cors from "cors";
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 app.get("/", (req, res) => {
   res.send("Hello World");
@@ -29,6 +31,13 @@ app.post("/todos", async (req, res) => {
 app.delete("/todos/:id", async (req, res) => {
   const { id } = z.object({ id: z.coerce.number() }).parse(req.params);
   await db.delete(todosTable).where(eq(todosTable.id, id));
+  res.sendStatus(200);
+});
+
+app.patch("/todos/:id", async (req, res) => {
+  const { id } = z.object({ id: z.coerce.number() }).parse(req.params);
+  const data = z.object({ status: z.coerce.number() }).parse(req.body);
+  await db.update(todosTable).set(data).where(eq(todosTable.id, id));
   res.sendStatus(200);
 });
 
