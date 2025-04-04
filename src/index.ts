@@ -19,8 +19,13 @@ app.get("/todos", async (req, res) => {
 });
 
 app.post("/todos", async (req, res) => {
-  const data = z.object({ text: z.string().min(2) }).parse(req.body);
-  const [newTodo] = await db.insert(todosTable).values(data).returning();
+  const parsed = z.object({ text: z.string().min(2) }).safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ messages: parsed.error.flatten().fieldErrors});
+    return;
+  }
+
+  const [newTodo] = await db.insert(todosTable).values(parsed.data).returning();
   res.json(newTodo);
 });
 
